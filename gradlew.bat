@@ -1,89 +1,30 @@
 @echo off
-REM Copyright 2021 the original author or authors.
-REM
-REM Licensed under the Apache License, Version 2.0 (the "License");
-REM you may not use this file except in compliance with the License.
-REM You may obtain a copy of the License at
-REM
-REM      https://www.apache.org/licenses/LICENSE-2.0
-REM
-REM Unless required by applicable law or agreed to in writing, software
-REM distributed under the License is distributed on an "AS IS" BASIS,
-REM WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-REM See the License for the specific language governing permissions and limitations
-REM under the Licens
-REM
+@if "%DEBUG%" == "" @echo on
+setlocal
 
-@if "%DEBUG%" == "" @echo off
-@rem ##########################################################################
-@rem
-@rem  Gradle startup script for Windows
-@rem
-@rem ##########################################################################
+:setup
+pushd "%~dp0"
 
-@rem Set local scope for the variables with windows NT shell
-if "%OS%"=="Windows_NT" setlocal
+rem Skip the Gradle daemon if running as Administrator
+net session >nul 2>&1
+if %errorLevel% == 0 goto StartGradleAsDaemon
 
-set DIRNAME=%~dp0
-if "%DIRNAME%" == "" set DIRNAME=.
-set APP_BASE_NAME=%~n0
-set APP_HOME=%DIRNAME%
+if /i "%GRADLE_HOME%" == "" (
+  rem No GRADLE_HOME environment variable defined
+  set GRADLE_HOME=%~dp0gradle
+  if not exist "%GRADLE_HOME%\bin\gradle.bat" goto FailNoGradle
+)
 
-@rem Resolve any "." and ".." in APP_HOME to make it shorter.
-for %%i in ("%APP_HOME%") do set APP_HOME=%%~fi
+:StartGradleAsDaemon
+call "%GRADLE_HOME%\bin\gradle.bat" %*
 
-@rem Add default JVM options here. You can also use JAVA_OPTS and GRADLE_OPTS to pass JVM options to this script.
-set DEFAULT_JVM_OPTS="-Xmx2g" "-Dfile.encoding=UTF-8"
+:End
+popd
+endlocal
+goto :EOF
 
-@rem Find java.exe
-if defined JAVA_HOME goto findJavaFromJavaHome
-
-set JAVA_EXE=java.exe
-%JAVA_EXE% -version >NUL 2>&1
-if "%ERRORLEVEL%" == "0" goto execute
-
+:FailNoGradle
 echo.
-echo ERROR: JAVA_HOME is not set and no 'java' command could be found in your PATH.
-echo.
-echo Please set the JAVA_HOME variable in your environment to match the
-echo location of your Java installation.
-
-goto fail
-
-:findJavaFromJavaHome
-set JAVA_HOME=%JAVA_HOME:"=%
-set JAVA_EXE=%JAVA_HOME%/bin/java.exe
-
-if exist "%JAVA_EXE%" goto execute
-
-echo.
-echo ERROR: JAVA_HOME is set to an invalid directory: %JAVA_HOME%
-echo.
-echo Please set the JAVA_HOME variable in your environment to match the
-echo location of your Java installation.
-
-goto fail
-
-:execute
-@rem Setup the command line
-
-set CLASSPATH=%APP_HOME%\gradle\wrapper\gradle-wrapper.jar
-
-
-@rem Execute Gradle
-"%JAVA_EXE%" %DEFAULT_JVM_OPTS% %JAVA_OPTS% %GRADLE_OPTS% "-Dorg.gradle.appname=%APP_BASE_NAME%" -classpath "%CLASSPATH%" org.gradle.wrapper.GradleWrapperMain %*
-
-:end
-@rem End local scope for the variables with windows NT shell
-if "%ERRORLEVEL%"=="0" goto mainEnd
-
-:fail
-rem Set variable GRADLE_EXIT_CONSOLE if you need the _script_ return code instead of
-rem the _cmd_ return code!
-if not "" == "%GRADLE_EXIT_CONSOLE%" exit 1
+echo Gradle version 8.7 not found. Please download it from https://gradle.org/install/
 exit /b 1
 
-:mainEnd
-if "%OS%"=="Windows_NT" endlocal
-
-:omega
