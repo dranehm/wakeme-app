@@ -122,7 +122,7 @@ fun WakeScreen(viewModel: WakeViewModel) {
                 }
                 Switch(
                     checked = viewModel.caffeineMode,
-                    onCheckedChange = { viewModel.setCaffeineMode(it) },
+                    onCheckedChange = { viewModel.updateCaffeineMode(it) },
                     colors = SwitchDefaults.colors(
                         checkedThumbColor = Color.White,
                         checkedTrackColor = OrangeMain

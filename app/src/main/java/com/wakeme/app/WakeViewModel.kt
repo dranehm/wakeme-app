@@ -22,7 +22,7 @@ class WakeViewModel : ViewModel() {
         appContext = context.applicationContext
     }
 
-    fun setCaffeineMode(enabled: Boolean) {
+    fun updateCaffeineMode(enabled: Boolean) {
         caffeineMode = enabled
         if (enabled) {
             acquireWakeLock()
