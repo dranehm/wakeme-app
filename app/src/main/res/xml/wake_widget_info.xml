@@ -5,7 +5,7 @@
     android:initialLayout="@layout/widget_wake"
     android:resizeMode="horizontal|vertical"
     android:widgetCategory="home_screen"
-    android:previewImage="@drawable/ic_wake_on"
+    android:previewImage="@android:drawable/ic_menu_gallery"
     android:updatePeriodMillis="0"
     android:initialKeyguardLayout="@layout/widget_wake">
 </appwidget-provider>
