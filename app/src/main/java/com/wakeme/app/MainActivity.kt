@@ -55,7 +55,7 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        ssetContent {
+        setContent {
             WakeMeTheme {
                 // REMOVED: DisposableEffect (No longer needed here)
                 Surface(
