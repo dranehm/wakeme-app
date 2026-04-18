@@ -1,3 +1,4 @@
+
 #!/bin/sh
 
 ##############################################################################
@@ -21,7 +22,7 @@ while [ -h "$APP_HOME/gradlew" ] ; do
 done
 
 # Add default JVM options here. You can also use JAVA_OPTS and GRADLE_OPTS to pass JVM options to this script.
-DEFAULT_JVM_OPTS="-Xmx2048m -Dfile.encoding=UTF-8"
+DEFAULT_JVM_OPTS='"-Xmx2048m" "-Dfile.encoding=UTF-8"'
 
 # Use the maximum available, or set MAX_FD != -1 to use that value.
 MAX_FD="maximum"
@@ -41,15 +42,16 @@ die () {
 cygwin=false
 darwin=false
 case "`uname`" in
-  CYGWIN*)
+  CYGWIN* )
     cygwin=true
     ;;
-  Darwin*)
+  Darwin* )
     darwin=true
     ;;
 esac
 
 CLASSPATH=$APP_HOME/gradle/wrapper/gradle-wrapper.jar
+
 
 # Determine the Java command to use to start the JVM.
 if [ -n "$JAVA_HOME" ] ; then
@@ -59,11 +61,17 @@ if [ -n "$JAVA_HOME" ] ; then
         JAVACMD="$JAVA_HOME/bin/java"
     fi
     if [ ! -x "$JAVACMD" ] ; then
-        die "ERROR: JAVA_HOME is set to an invalid directory: $JAVA_HOME\n\nPlease set the JAVA_HOME variable in your environment to match the\nlocation of your Java installation."
+        die "ERROR: JAVA_HOME is set to an invalid directory: $JAVA_HOME
+
+Please set the JAVA_HOME variable in your environment to match the
+location of your Java installation."
     fi
 else
     JAVACMD="java"
-    which java >/dev/null 2>&1 || die "ERROR: JAVA_HOME is not set and no 'java' command could be found in your PATH.\n\nPlease set the JAVA_HOME variable in your environment to match the\nlocation of your Java installation."
+    which java >/dev/null 2>&1 || die "ERROR: JAVA_HOME is not set and no 'java' command could be found in your PATH.
+
+Please set the JAVA_HOME variable in your environment to match the
+location of your Java installation."
 fi
 
 # Increase the maximum file descriptors if we can.
@@ -84,8 +92,10 @@ fi
 
 # For Darwin, add options to specify how the application appears in the dock
 if $darwin ; then
-    GRADLE_OPTS="$GRADLE_OPTS \"-Xdock:name=\$APP_NAME\" \"-Xdock:icon=\$APP_HOME/media/gradle.icns\""
+    GRADLE_OPTS="$GRADLE_OPTS \"-Xdock:name=$APP_NAME\" \"-Xdock:icon=$APP_HOME/media/gradle.icns\""
 fi
 
-exec "$JAVACMD" $DEFAULT_JVM_OPTS $JAVA_OPTS $GRADLE_OPTS "\"-Dorg.gradle.appname=$APP_BASE_NAME\"" -classpath "$CLASSPATH" org.gradle.wrapper.GradleWrapperMain "$@"
+exec "$JAVACMD" $DEFAULT_JVM_OPTS $JAVA_OPTS $GRADLE_OPTS \
+     "-Dorg.gradle.appname=$APP_BASE_NAME" -classpath "$CLASSPATH" \
+     org.gradle.wrapper.GradleWrapperMain "$@"
 
