@@ -18,9 +18,12 @@ class WakeService : Service() {
         super.onCreate()
         createNotificationChannel()
         val pm = getSystemService(POWER_SERVICE) as PowerManager
+        
+        // SCREEN_BRIGHT_WAKE_LOCK keeps the screen on even when the app is minimized
+        // ACQUIRE_CAUSES_WAKEUP ensures the screen turns on if it was already dimming
         wakeLock = pm.newWakeLock(
-            PowerManager.PARTIAL_WAKE_LOCK,
-            "WakeMe::PersistentWakeLock"
+            PowerManager.SCREEN_BRIGHT_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP,
+            "WakeMe::GlobalScreenLock"
         )
     }
 
@@ -36,7 +39,8 @@ class WakeService : Service() {
 
     private fun startWakeLock() {
         if (wakeLock?.isHeld == false) {
-            wakeLock?.acquire(10*60*60*1000L)
+            // Use a high timeout or Long.MAX_VALUE
+            wakeLock?.acquire(24*60*60*1000L) // 24 hours
         }
         
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
