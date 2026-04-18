@@ -40,13 +40,16 @@ class WakeService : Service() {
             .setContentText("Screen wake lock held")
             .setSmallIcon(android.R.drawable.ic_lock_idle_lock)
             .build()
-        startForeground(1, notification)
-    }
 
-    private fun stopWakeLock() {
-        wakeLock?.release()
-        stopForeground(true)
-        stopSelf()
+        if (android.os.Build.VERSION.SDK_INT >= 34) { // Android 14+
+            startForeground(
+                1, 
+                notification, 
+                android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+            )
+        } else {
+            startForeground(1, notification)
+        }
     }
 
     private fun createNotificationChannel() {

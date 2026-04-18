@@ -12,11 +12,14 @@ class WakeTileService : TileService() {
         val enabled = !WakeWidget.getWakeState(this)
         WakeWidget.setWakeState(this, enabled)
         updateTile(enabled)
+
         val serviceIntent = Intent(this, WakeService::class.java).apply {
             action = if (enabled) "START_WAKE" else "STOP_WAKE"
         }
+
         if (enabled) {
-            startForegroundService(this, serviceIntent)
+            // Use the context directly to ensure the intent is bound to the click event
+            applicationContext.startForegroundService(serviceIntent)
         } else {
             stopService(serviceIntent)
         }
