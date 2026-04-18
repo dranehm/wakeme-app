@@ -1,10 +1,11 @@
 package com.wakeme.app
 
-import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
 import android.content.Intent
+import android.content.pm.ServiceInfo
+import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
 import androidx.core.app.NotificationCompat
@@ -34,26 +35,38 @@ class WakeService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     private fun startWakeLock() {
-        wakeLock?.acquire(10*60*60*1000L)
+        if (wakeLock?.isHeld == false) {
+            wakeLock?.acquire(10*60*60*1000L)
+        }
+        
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("Wake Me Active")
             .setContentText("Screen wake lock held")
             .setSmallIcon(android.R.drawable.ic_lock_idle_lock)
+            .setOngoing(true)
             .build()
 
-        if (android.os.Build.VERSION.SDK_INT >= 34) { // Android 14+
-            startForeground(
-                1, 
-                notification, 
-                android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
-            )
+        if (Build.VERSION.SDK_INT >= 34) {
+            startForeground(1, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
         } else {
             startForeground(1, notification)
         }
     }
 
+    private fun stopWakeLock() {
+        try {
+            if (wakeLock?.isHeld == true) {
+                wakeLock?.release()
+            }
+        } catch (e: Exception) {
+            // Already released
+        }
+        stopForeground(STOP_FOREGROUND_REMOVE)
+        stopSelf()
+    }
+
     private fun createNotificationChannel() {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 CHANNEL_ID,
                 "Wake Me Service",
