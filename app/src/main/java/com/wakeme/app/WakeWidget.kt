@@ -58,25 +58,32 @@ class WakeWidget : AppWidgetProvider() {
         appWidgetManager.updateAppWidget(appWidgetId, views)
     }
 
-    override fun onReceive(context: Context?, intent: Intent?) {
+     override fun onReceive(context: Context?, intent: Intent?) {
         super.onReceive(context, intent)
-        val appWidgetId = intent?.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, -1) ?: -1
-        if (intent?.action == "TOGGLE_WAKE" && appWidgetId != -1) {
-            val enabled = !getWakeState(context!!)
-            setWakeState(context, enabled)
-            val serviceIntent = Intent(context, WakeService::class.java).apply {
+        val ctx = context ?: return
+        
+        if (intent?.action == "TOGGLE_WAKE") {
+            val enabled = !getWakeState(ctx)
+            setWakeState(ctx, enabled)
+            
+            val serviceIntent = Intent(ctx, WakeService::class.java).apply {
                 action = if (enabled) "START_WAKE" else "STOP_WAKE"
             }
+            
             if (enabled) {
-                startForegroundService(context, serviceIntent)
+                startForegroundService(ctx, serviceIntent)
             } else {
-                context.stopService(serviceIntent)
+                ctx.stopService(serviceIntent)
             }
-            // Update all widgets
-            val appWidgetManager = AppWidgetManager.getInstance(context)
-            val component = ComponentName(context, WakeWidget::class.java)
-            appWidgetManager.notifyAppWidgetViewDataChanged()
-            appWidgetManager.updateAppWidget(component, RemoteViews(context.packageName, R.layout.widget_wake))
+
+            // Refresh the UI on all instances of this widget
+            val appWidgetManager = AppWidgetManager.getInstance(ctx)
+            val componentName = ComponentName(ctx, WakeWidget::class.java)
+            val appWidgetIds = appWidgetManager.getAppWidgetIds(componentName)
+            
+            for (id in appWidgetIds) {
+                updateAppWidget(ctx, appWidgetManager, id)
+            }
         }
     }
 }

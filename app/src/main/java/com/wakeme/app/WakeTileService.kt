@@ -20,7 +20,6 @@ class WakeTileService : TileService() {
         } else {
             stopService(serviceIntent)
         }
-        collapsePanels()
     }
 
     override fun onTileAdded() {
