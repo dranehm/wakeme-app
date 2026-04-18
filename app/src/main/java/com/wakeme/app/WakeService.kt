@@ -19,11 +19,14 @@ class WakeService : Service() {
         createNotificationChannel()
         val pm = getSystemService(POWER_SERVICE) as PowerManager
         
-        // SCREEN_BRIGHT_WAKE_LOCK keeps the screen on even when the app is minimized
-        // ACQUIRE_CAUSES_WAKEUP ensures the screen turns on if it was already dimming
+        // Using FULL_WAKE_LOCK (deprecated but still works for this purpose) 
+        // combined with ACQUIRE_CAUSES_WAKEUP
+        @Suppress("DEPRECATION")
         wakeLock = pm.newWakeLock(
-            PowerManager.SCREEN_BRIGHT_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP,
-            "WakeMe::GlobalScreenLock"
+            PowerManager.FULL_WAKE_LOCK or 
+            PowerManager.ACQUIRE_CAUSES_WAKEUP or 
+            PowerManager.ON_AFTER_RELEASE,
+            "WakeMe::GlobalWakeLock"
         )
     }
 
@@ -39,15 +42,15 @@ class WakeService : Service() {
 
     private fun startWakeLock() {
         if (wakeLock?.isHeld == false) {
-            // Use a high timeout or Long.MAX_VALUE
-            wakeLock?.acquire(24*60*60*1000L) // 24 hours
+            wakeLock?.acquire(10 * 60 * 60 * 1000L) // 10 hours
         }
-        
+
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Wake Me Active")
-            .setContentText("Screen wake lock held")
+            .setContentTitle("Wake Me is Active")
+            .setContentText("Global Screen Wake Lock is ON")
             .setSmallIcon(android.R.drawable.ic_lock_idle_lock)
-            .setOngoing(true)
+            .setOngoing(true) // Crucial: prevents user from swiping it away
+            .setPriority(NotificationCompat.PRIORITY_MAX) // High priority
             .build()
 
         if (Build.VERSION.SDK_INT >= 34) {
