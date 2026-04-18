@@ -16,11 +16,16 @@
         android:textStyle="bold"
         android:textColor="@android:color/white" />
 
-    <Button
+    <TextView
         android:id="@+id/widget_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Toggle Wake Lock"
-        android:minHeight="48dp" />
+        android:minHeight="48dp"
+        android:gravity="center"
+        android:background="@android:color/darker_gray"
+        android:textColor="@android:color/white"
+        android:clickable="true" />
 
 </LinearLayout>
+
