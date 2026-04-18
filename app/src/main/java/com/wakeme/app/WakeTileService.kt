@@ -3,12 +3,27 @@ package com.wakeme.app
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
 import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
 import androidx.core.content.ContextCompat.startForegroundService
 
 class WakeTileService : TileService() {
 
     override fun onClick() {
         super.onClick()
+
+        // 1. Permission Check
+        if (!Settings.System.canWrite(this)) {
+            val intent = Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS).apply {
+                data = Uri.parse("package:$packageName")
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            // This collapses the notification tray and opens Settings
+            startActivityAndCollapse(intent)
+            return
+        }
+
+        // 2. Logic if permission is granted
         val enabled = !WakeWidget.getWakeState(this)
         WakeWidget.setWakeState(this, enabled)
         updateTile(enabled)
@@ -18,7 +33,6 @@ class WakeTileService : TileService() {
         }
 
         if (enabled) {
-            // Use the context directly to ensure the intent is bound to the click event
             applicationContext.startForegroundService(serviceIntent)
         } else {
             stopService(serviceIntent)
@@ -36,14 +50,13 @@ class WakeTileService : TileService() {
     }
 
     private fun updateTile(enabled: Boolean) {
-        val tile = qsTile
+        val tile = qsTile ?: return
         tile.state = if (enabled) {
             Tile.STATE_ACTIVE
         } else {
             Tile.STATE_INACTIVE
         }
         tile.label = "Wake Me"
-        tile.contentDescription = if (enabled) "Screen awake - tap to stop" else "Screen sleep - tap to wake"
         tile.updateTile()
     }
 }

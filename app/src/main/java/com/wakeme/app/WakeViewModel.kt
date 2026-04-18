@@ -1,8 +1,10 @@
 package com.wakeme.app
 
 import android.content.Context
-import android.content.SharedPreferences
 import android.content.Intent
+import android.content.SharedPreferences
+import android.net.Uri
+import android.provider.Settings
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
@@ -18,33 +20,45 @@ class WakeViewModel : ViewModel() {
     private var appContext: Context? = null
     private var prefs: SharedPreferences? = null
 
-    // Listener that detects changes made by the Tile or Widget
     private val preferenceListener = SharedPreferences.OnSharedPreferenceChangeListener { sharedPrefs, key ->
         if (key == "wake_enabled") {
-            val isEnabled = sharedPrefs.getBoolean(key, false)
-            caffeineMode = isEnabled
-            log(if (isEnabled) "[Sync] Tile/Widget turned ON" else "[Sync] Tile/Widget turned OFF")
+            caffeineMode = sharedPrefs.getBoolean(key, false)
         }
     }
 
     fun init(context: Context) {
         appContext = context.applicationContext
         prefs = appContext?.getSharedPreferences("wakeme_prefs", Context.MODE_PRIVATE)
-        
-        // Initial sync
         caffeineMode = prefs?.getBoolean("wake_enabled", false) ?: false
-        
-        // Start listening for background changes
         prefs?.registerOnSharedPreferenceChangeListener(preferenceListener)
     }
 
+    // THIS IS THE UPDATED TOGGLE LOGIC
     fun updateCaffeineMode(enabled: Boolean) {
         val ctx = appContext ?: return
-        
-        // 1. Save to prefs so Tile/Widget stay in sync
+
+        if (!enabled) {
+            // Turning it off never requires a permission check
+            performToggle(false)
+        } else {
+            // Turning it on triggers the permission check
+            if (Settings.System.canWrite(ctx)) {
+                performToggle(true)
+            } else {
+                val intent = Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS).apply {
+                    data = Uri.parse("package:${ctx.packageName}")
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                ctx.startActivity(intent)
+                log("[System] Permission required: Modify System Settings")
+            }
+        }
+    }
+
+    private fun performToggle(enabled: Boolean) {
+        val ctx = appContext ?: return
         prefs?.edit()?.putBoolean("wake_enabled", enabled)?.apply()
         
-        // 2. Start/Stop the Service (The Service handles the actual WakeLock)
         val intent = Intent(ctx, WakeService::class.java).apply {
             action = if (enabled) "START_WAKE" else "STOP_WAKE"
         }
@@ -55,7 +69,7 @@ class WakeViewModel : ViewModel() {
             ctx.stopService(intent)
         }
         
-        log(if (enabled) "[App] Requesting WakeLock..." else "[App] Releasing WakeLock...")
+        log(if (enabled) "[App] Caffeine Mode: ON" else "[App] Caffeine Mode: OFF")
     }
 
     fun log(message: String) {
