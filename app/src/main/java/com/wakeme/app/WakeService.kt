@@ -7,27 +7,16 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
-import android.os.PowerManager
+import android.provider.Settings
 import androidx.core.app.NotificationCompat
 
 class WakeService : Service() {
-    private var wakeLock: PowerManager.WakeLock? = null
     private val CHANNEL_ID = "wakeme_channel"
+    private var originalTimeout: Int = 30000 // Default 30s fallback
 
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
-        val pm = getSystemService(POWER_SERVICE) as PowerManager
-        
-        // Using FULL_WAKE_LOCK (deprecated but still works for this purpose) 
-        // combined with ACQUIRE_CAUSES_WAKEUP
-        @Suppress("DEPRECATION")
-        wakeLock = pm.newWakeLock(
-            PowerManager.FULL_WAKE_LOCK or 
-            PowerManager.ACQUIRE_CAUSES_WAKEUP or 
-            PowerManager.ON_AFTER_RELEASE,
-            "WakeMe::GlobalWakeLock"
-        )
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -41,16 +30,19 @@ class WakeService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     private fun startWakeLock() {
-        if (wakeLock?.isHeld == false) {
-            wakeLock?.acquire(10 * 60 * 60 * 1000L) // 10 hours
+        if (Settings.System.canWrite(this)) {
+            // Save current user timeout
+            originalTimeout = Settings.System.getInt(contentResolver, Settings.System.SCREEN_OFF_TIMEOUT, 30000)
+            
+            // Set timeout to 24 hours (Infinite effect)
+            Settings.System.putInt(contentResolver, Settings.System.SCREEN_OFF_TIMEOUT, 24 * 60 * 60 * 1000)
         }
 
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("Wake Me is Active")
-            .setContentText("Global Screen Wake Lock is ON")
+            .setContentText("System timeout extended to 24h")
             .setSmallIcon(android.R.drawable.ic_lock_idle_lock)
-            .setOngoing(true) // Crucial: prevents user from swiping it away
-            .setPriority(NotificationCompat.PRIORITY_MAX) // High priority
+            .setOngoing(true)
             .build()
 
         if (Build.VERSION.SDK_INT >= 34) {
@@ -61,12 +53,9 @@ class WakeService : Service() {
     }
 
     private fun stopWakeLock() {
-        try {
-            if (wakeLock?.isHeld == true) {
-                wakeLock?.release()
-            }
-        } catch (e: Exception) {
-            // Already released
+        if (Settings.System.canWrite(this)) {
+            // Restore user's original timeout
+            Settings.System.putInt(contentResolver, Settings.System.SCREEN_OFF_TIMEOUT, originalTimeout)
         }
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
@@ -75,8 +64,7 @@ class WakeService : Service() {
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
-                CHANNEL_ID,
-                "Wake Me Service",
+                CHANNEL_ID, "Wake Me Service",
                 NotificationManager.IMPORTANCE_LOW
             )
             getSystemService(NotificationManager::class.java)?.createNotificationChannel(channel)
@@ -84,7 +72,9 @@ class WakeService : Service() {
     }
 
     override fun onDestroy() {
-        stopWakeLock()
+        if (Settings.System.canWrite(this)) {
+            Settings.System.putInt(contentResolver, Settings.System.SCREEN_OFF_TIMEOUT, originalTimeout)
+        }
         super.onDestroy()
     }
 }

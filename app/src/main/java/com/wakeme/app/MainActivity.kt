@@ -32,6 +32,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontFamily.Companion.Monospace
 import com.wakeme.app.ui.theme.WakeMeTheme
+import android.provider.Settings
+import android.net.Uri
+import android.content.Intent
 
 val OrangeMain = Color(0xFFFF6900)
 val DarkBackground = Color(0xFF141414)
@@ -48,6 +51,13 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewModel.init(applicationContext)
+
+        if (!Settings.System.canWrite(this)) {
+            val intent = Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS).apply {
+                data = Uri.parse("package:$packageName")
+            }
+            startActivity(intent)
+        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
