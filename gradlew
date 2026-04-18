@@ -1,4 +1,3 @@
-
 #!/bin/sh
 
 ##############################################################################
@@ -22,7 +21,6 @@ while [ -h "$APP_HOME/gradlew" ] ; do
 done
 
 # Add default JVM options here. You can also use JAVA_OPTS and GRADLE_OPTS to pass JVM options to this script.
-DEFAULT_JVM_OPTS='"-Xmx2048m" "-Dfile.encoding=UTF-8"'
 
 # Use the maximum available, or set MAX_FD != -1 to use that value.
 MAX_FD="maximum"
@@ -95,7 +93,7 @@ if $darwin ; then
     GRADLE_OPTS="$GRADLE_OPTS \"-Xdock:name=$APP_NAME\" \"-Xdock:icon=$APP_HOME/media/gradle.icns\""
 fi
 
-exec "$JAVACMD" $DEFAULT_JVM_OPTS $JAVA_OPTS $GRADLE_OPTS \
+exec "$JAVACMD" $JAVA_OPTS $GRADLE_OPTS \
      "-Dorg.gradle.appname=$APP_BASE_NAME" -classpath "$CLASSPATH" \
      org.gradle.wrapper.GradleWrapperMain "$@"
 
